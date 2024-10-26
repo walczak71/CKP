@@ -188,6 +188,46 @@ document.getElementById("exportButton").addEventListener("click", function() {
     XLSX.writeFile(workbook, "inventory.xlsx");
 });
 
+document.getElementById("helpButton").addEventListener("click", function() {
+    // Utwórz nowe okno pomocy
+    const helpWindow = window.open("", "HelpWindow", "width=400,height=600");
+
+    // Wypełnij zawartość nowego okna
+    helpWindow.document.write(`
+        <html>
+        <head>
+            <title>Help</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 20px; }
+                h2 { text-align: center; }
+                p { margin: 10px 0; }
+                #closeButton {
+                    display: block;
+                    margin: 20px auto;
+                    padding: 10px 20px;
+                    font-size: 16px;
+                    cursor: pointer;
+                }
+            </style>
+        </head>
+        <body>
+            <h2>Jak korzystać z aplikacji</h2>
+            <p>Eksport - eksportuje stan części do pliku excel.</p>
+            <p>Wyczyść - czyści listę wszystkich części, ktore są na Twoim stanie.</p>
+            <p>Usuń - usuwa konretna pozycje z listy całkowicie(po usunięciu trzeba dodać ją na nowo.</p>
+            <p>Custom - na rozwijanej liście jest napis custom. To jest funkcja dodania nowego produktu do listy.</p>
+            <button id="closeButton">Zamknij</button>
+        </body>
+        </html>
+    `);
+
+    // Zamknij okno pomocy po kliknięciu przycisku „Zamknij”
+    helpWindow.document.getElementById("closeButton").onclick = function() {
+        helpWindow.close();
+    };
+});
+
+
 // Inicjalizacja
 updateDropdownFromStorage();
 updateInventoryList();
