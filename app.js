@@ -116,20 +116,27 @@ document.getElementById("removeButton").addEventListener("click", function() {
     const productSelect = document.getElementById("product");
     const productName = productSelect.value;
 
-    // Zablokuj możliwość usuwania predefiniowanych produktów
+    // Sprawdź, czy produkt jest predefiniowany
     if (predefinedProducts.includes(productName)) {
         alert("Po chuj usuwasz? 😎");
         return;
     }
 
+    // Sprawdź, czy wybrano produkt do usunięcia
     if (productName && productName !== "Custom") {
-        removeProductFromDropdown(productName);
-        removeProductFromInventory(productName);
-        productSelect.value = ""; // Resetuj wybór
+        const confirmDelete = confirm(`Czy na pewno chcesz usunąć produkt "${productName}" z listy?`);
+        
+        // Usuwaj tylko jeśli użytkownik potwierdzi
+        if (confirmDelete) {
+            removeProductFromDropdown(productName);
+            removeProductFromInventory(productName);
+            productSelect.value = ""; // Resetuj wybór
+        }
     } else {
         alert("Wybierz produkt do usunięcia.");
     }
 });
+
 
 // Obsługa przycisku czyszczenia
 document.getElementById("clearButton").addEventListener("click", function() {
