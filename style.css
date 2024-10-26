@@ -12,6 +12,7 @@ body {
     min-height: 100vh;
     background-color: #f4f4f9;
     font-family: Arial, sans-serif;
+    padding-bottom: 1rem;
 }
 
 h1 {
@@ -139,6 +140,7 @@ input[type="number"] {
     width: 100%;
     position: fixed;
     bottom: 0;
+    margin-bottom: 1rem;
 }
 
 .footer p {
