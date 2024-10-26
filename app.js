@@ -227,6 +227,16 @@ document.getElementById("helpButton").addEventListener("click", function() {
     };
 });
 
+document.getElementById("feedbackButton").addEventListener("click", function() {
+    const email = "mateusz.walczak@checkpt.com"; // Wstaw swój adres e-mail
+    const subject = encodeURIComponent("Feedback odnośnie aplikacji magazynowej"); // Temat wiadomości
+    const body = encodeURIComponent(""); // Przykładowa treść wiadomości
+    
+    // Otwórz aplikację pocztową z wstępnie wypełnionymi danymi
+    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+});
+
+
 
 // Inicjalizacja
 updateDropdownFromStorage();
