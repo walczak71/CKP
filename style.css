@@ -115,7 +115,8 @@ button:hover {
 /* Dodatkowe style dla kafelków w responsywnym układzie */
 @media (max-width: 500px) {
     .container {
-        flex-direction: column; /* Zmiana kierunku na kolumnę na bardzo małych ekranach */
+        flex-direction: row; /* Zmiana kierunku na kolumnę na bardzo małych ekranach */
+        padding-top: 2rem;
     }
 
     .card {
