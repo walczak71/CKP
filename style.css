@@ -123,6 +123,14 @@ input[type="number"] {
         gap: 10px;
     }
 
+    .logo {
+        width: 5rem; /* Adjust size as needed */
+        height: auto;
+        position: absolute;
+        top: 10px;
+        left: 10px;
+    }
+
     .card {
         width: 80%;
         margin: 10px 0;
