@@ -1,3 +1,10 @@
+// Tablica z predefiniowanymi produktami
+const predefinedProducts = [
+    "Reader RFID", "Detacher RFID", "Pager", "Pilot 4 kanały", 
+    "Pilot 2 kanały", "Hyperguard centralka", "Hyperguard płytka", 
+    "CPiD", "Zasilacz 24V", "Zasilacz 12V", "Wirama 2000", "Router GSM"
+];
+
 // Obsługa formularza dodawania produktów
 document.getElementById("inventoryForm").addEventListener("submit", function(event) {
     event.preventDefault();
@@ -76,7 +83,7 @@ function addToInventory(product, quantity, minQuantity) {
     updateInventoryList();
 }
 
-// Funkcja aktualizująca listę produktów z podświetleniem minimalnych stanów i dodaniem przycisku edycji
+// Funkcja aktualizująca listę produktów z podświetleniem minimalnych stanów
 function updateInventoryList() {
     const inventoryList = document.getElementById("productList");
     inventoryList.innerHTML = ""; 
@@ -89,17 +96,11 @@ function updateInventoryList() {
             listItem.style.backgroundColor = 'red'; // Podświetlenie w przypadku niskiej ilości
         }
 
-        listItem.addEventListener("click", () => selectProduct(item.product)); // Dodaj nasłuchiwanie na kliknięcie
-
-        // Dodaj przycisk edytuj
-        const editButton = document.createElement("button");
+        const editButton = document.createElement("button"); // Przycisk edytuj
         editButton.textContent = "Edytuj";
-        editButton.addEventListener("click", (event) => {
-            event.stopPropagation(); // Zapobiega wyborowi produktu
-            openEditWindow(item.product);
-        });
-
+        editButton.addEventListener("click", () => openEditWindow(item.product)); // Obsługa otwierania okna edycji
         listItem.appendChild(editButton);
+
         inventoryList.appendChild(listItem);
     });
 }
@@ -130,9 +131,9 @@ function openEditWindow(productName) {
                 <form id="editForm">
                     <label>Nazwa: ${product.product}</label><br><br>
                     <label>Ilość:</label>
-                    <input type="number" id="quantity" value="${product.quantity}" required><br><br>
+                    <input type="number" id="quantity" value="${product.quantity}" disabled><br><br>
                     <label>Minimalna ilość:</label>
-                    <input type="number" id="minQuantity" value="${product.minQuantity}" required><br><br>
+                    <input type="number" id="minQuantity" value="${product.minQuantity}"><br><br>
                     <button type="submit">Zapisz</button>
                 </form>
             </body>
@@ -155,26 +156,29 @@ function openEditWindow(productName) {
     }
 }
 
-// Obsługa przycisku usuwania
+// Obsługa eksportu do pliku XLSX
+document.getElementById("exportButton").addEventListener("click", exportToExcel);
+function exportToExcel() {
+    const inventory = JSON.parse(localStorage.getItem("inventory")) || [];
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.json_to_sheet(inventory);
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Inventory");
+
+    XLSX.writeFile(workbook, "inwentory.xlsx");
+}
+
+// Obsługa przycisku usuwania pozycji z listy
 document.getElementById("removeButton").addEventListener("click", function() {
     const productSelect = document.getElementById("product");
-    const productName = productSelect.value;
-
-    if (productName && productName !== "Custom") {
-        removeProductFromDropdown(productName);
-        removeProductFromInventory(productName);
-        productSelect.value = ""; // Resetuj wybór
-    } else {
-        alert("Wybierz produkt do usunięcia.");
-    }
-});
-
-// Obsługa przycisku czyszczenia
-document.getElementById("clearButton").addEventListener("click", function() {
-    if (confirm("Czy na pewno chcesz wyczyścić całą listę?")) {
-        localStorage.removeItem("inventory"); // Usuń dane z localStorage
-        updateInventoryList(); // Zaktualizuj widok listy
-        document.getElementById("product").selectedIndex = 0; // Resetuj rozwijaną listę
+    const selectedProduct = productSelect.value;
+    
+    if (selectedProduct) {
+        const confirmDelete = confirm(`Czy na pewno chcesz usunąć ${selectedProduct} z listy?`);
+        
+        if (confirmDelete) {
+            removeProductFromDropdown(selectedProduct);
+            removeProductFromInventory(selectedProduct);
+        }
     }
 });
 
@@ -182,7 +186,7 @@ document.getElementById("clearButton").addEventListener("click", function() {
 function removeProductFromDropdown(productName) {
     const productSelect = document.getElementById("product");
     const optionToRemove = Array.from(productSelect.options).find(option => option.value === productName);
-    
+
     if (optionToRemove) {
         productSelect.removeChild(optionToRemove);
     }
@@ -192,18 +196,10 @@ function removeProductFromDropdown(productName) {
 function removeProductFromInventory(productName) {
     let inventory = JSON.parse(localStorage.getItem("inventory")) || [];
     inventory = inventory.filter(item => item.product !== productName);
-    localStorage.setItem("inventory", JSON.stringify(inventory));
-    updateInventoryList();
+    localStorage.setItem("inventory", JSON.stringify(inventory)); // Zaktualizuj localStorage
+    updateInventoryList(); // Odśwież listę produktów
 }
 
-// Obsługa eksportu do pliku XLSX
-document.getElementById("exportButton").addEventListener("click", function() {
-    const inventory = JSON.parse(localStorage.getItem("inventory")) || [];
-    const exportData = inventory.map(item => {
-        const shortage = item.minQuantity - item.quantity > 0 ? item.minQuantity - item.quantity : 0;
-        const orderText = shortage > 0 ? `Zamówić ${shortage}` : ""; // Tekst o brakującej ilości
-        return {
-            Produkt: item.product,
-            Ilość: item.quantity,
-            Minimalna: item.minQuantity || 0,
-            Status: shortage > 0 ? 'Brak' : 'OK',
+// Wywołanie początkowe aktualizacji
+updateDropdownFromStorage();
+updateInventoryList();
