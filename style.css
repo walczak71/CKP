@@ -161,7 +161,7 @@ input[type="number"] {
     width: 100%;
     position: fixed;
     bottom: 0;
-    margin-bottom: 1rem;
+    padding-bottom: 1rem;
 }
 
 .footer p {
