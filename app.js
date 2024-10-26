@@ -213,10 +213,10 @@ document.getElementById("helpButton").addEventListener("click", function() {
         </head>
         <body>
             <h2 style="font-size:3rem">Jak korzystać z aplikacji</h2>
-            <p style="font-size:2rem">Eksport - eksportuje stan części do pliku excel.</p>
-            <p style="font-size:2rem">Wyczyść - czyści listę wszystkich części, ktore są na Twoim stanie.</p>
-            <p style="font-size:2rem">Usuń - usuwa konretna pozycje z listy całkowicie(po usunięciu trzeba dodać ją na nowo.</p>
-            <p style="font-size:2rem">Custom - na rozwijanej liście jest napis custom. To jest funkcja dodania nowego produktu do listy.</p>
+            <p style="font-size:2rem"><strong>Eksport</strong> - eksportuje stan części do pliku excel.</p>
+            <p style="font-size:2rem"><strong>Wyczyść</strong> - czyści listę wszystkich części, ktore są na Twoim stanie.</p>
+            <p style="font-size:2rem"><strong>Usuń</strong> - usuwa konretna pozycje z listy całkowicie(po usunięciu trzeba dodać ją na nowo.</p>
+            <p style="font-size:2rem"><strong>Custom</strong> - na rozwijanej liście jest napis custom. To jest funkcja dodania nowego produktu do listy.</p>
             <button id="closeButton" style="font-size:2rem; backgroud-color: #333">Zamknij</button>
         </body>
         </html>
