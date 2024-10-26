@@ -111,3 +111,15 @@ button:hover {
         width: 100%; /* Zmień szerokość na 100% w trybie mobilnym */
     }
 }
+
+/* Dodatkowe style dla kafelków w responsywnym układzie */
+@media (max-width: 500px) {
+    .container {
+        flex-direction: column; /* Zmiana kierunku na kolumnę na bardzo małych ekranach */
+    }
+
+    .card {
+        width: 100%; /* Kafelki zajmują 100% szerokości */
+        margin: 5px 0; /* Mniejsze marginesy dla lepszego dopasowania */
+    }
+}
