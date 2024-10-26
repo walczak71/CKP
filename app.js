@@ -158,6 +158,29 @@ function removeProductFromInventory(productName) {
     updateInventoryList(); // Odśwież listę produktów
 }
 
-// Wywołanie początkowe aktualizacji
+// Funkcja eksportu danych do XLSX
+document.getElementById("exportButton").addEventListener("click", function() {
+    const inventory = JSON.parse(localStorage.getItem("inventory")) || [];
+    const exportData = inventory.map(item => {
+        const shortage = item.minQuantity - item.quantity > 0 ? item.minQuantity - item.quantity : 0;
+        const orderText = shortage > 0 ? `Zamówić ${shortage}` : ""; // Tekst o brakującej ilości
+        return {
+            Produkt: item.product,
+            Ilość: item.quantity,
+            Minimalna: item.minQuantity || 0,
+            Status: shortage > 0 ? 'Brak' : 'OK',
+            Zamówienie: orderText // Dodaj informacje o zamówieniu
+        };
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Inventory");
+
+    // Zapisz plik XLSX
+    XLSX.writeFile(workbook, "inventory.xlsx");
+});
+
+// Inicjalizacja
 updateDropdownFromStorage();
 updateInventoryList();
