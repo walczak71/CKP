@@ -1,3 +1,10 @@
+// Tablica z predefiniowanymi produktami
+const predefinedProducts = [
+    "Reader RFID", "Detacher RFID", "Pager", "Pilot 4 kanały", 
+    "Pilot 2 kanały", "Hyperguard centralka", "Hyperguard płytka", 
+    "CPiD", "Zasilacz 24V", "Zasilacz 12V", "Wirama 2000", "Router GSM"
+];
+
 // Obsługa formularza dodawania produktów
 document.getElementById("inventoryForm").addEventListener("submit", function(event) {
     event.preventDefault();
@@ -109,6 +116,12 @@ document.getElementById("removeButton").addEventListener("click", function() {
     const productSelect = document.getElementById("product");
     const productName = productSelect.value;
 
+    // Zablokuj możliwość usuwania predefiniowanych produktów
+    if (predefinedProducts.includes(productName)) {
+        alert("Nie można usunąć predefiniowanego produktu.");
+        return;
+    }
+
     if (productName && productName !== "Custom") {
         removeProductFromDropdown(productName);
         removeProductFromInventory(productName);
@@ -131,7 +144,7 @@ document.getElementById("clearButton").addEventListener("click", function() {
 function removeProductFromDropdown(productName) {
     const productSelect = document.getElementById("product");
     const optionToRemove = Array.from(productSelect.options).find(option => option.value === productName);
-    
+
     if (optionToRemove) {
         productSelect.removeChild(optionToRemove);
     }
@@ -141,33 +154,10 @@ function removeProductFromDropdown(productName) {
 function removeProductFromInventory(productName) {
     let inventory = JSON.parse(localStorage.getItem("inventory")) || [];
     inventory = inventory.filter(item => item.product !== productName);
-    localStorage.setItem("inventory", JSON.stringify(inventory));
-    updateInventoryList();
+    localStorage.setItem("inventory", JSON.stringify(inventory)); // Zaktualizuj localStorage
+    updateInventoryList(); // Odśwież listę produktów
 }
 
-// Obsługa eksportu do pliku XLSX
-document.getElementById("exportButton").addEventListener("click", function() {
-    const inventory = JSON.parse(localStorage.getItem("inventory")) || [];
-    const exportData = inventory.map(item => {
-        const shortage = item.minQuantity - item.quantity > 0 ? item.minQuantity - item.quantity : 0;
-        const orderText = shortage > 0 ? `Zamówić ${shortage}` : ""; // Tekst o brakującej ilości
-        return {
-            Produkt: item.product,
-            Ilość: item.quantity,
-            Minimalna: item.minQuantity || 0,
-            Status: shortage > 0 ? 'Brak' : 'OK',
-            Zamówienie: orderText // Dodaj informacje o zamówieniu
-        };
-    });
-
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Inventory");
-
-    // Zapisz plik XLSX
-    XLSX.writeFile(workbook, "inventory.xlsx");
-});
-
-// Inicjalizacja
+// Wywołanie początkowe aktualizacji
 updateDropdownFromStorage();
 updateInventoryList();
