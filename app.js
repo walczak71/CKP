@@ -118,6 +118,15 @@ document.getElementById("removeButton").addEventListener("click", function() {
     }
 });
 
+// Obsługa przycisku czyszczenia
+document.getElementById("clearButton").addEventListener("click", function() {
+    if (confirm("Czy na pewno chcesz wyczyścić całą listę?")) {
+        localStorage.removeItem("inventory"); // Usuń dane z localStorage
+        updateInventoryList(); // Zaktualizuj widok listy
+        document.getElementById("product").selectedIndex = 0; // Resetuj rozwijaną listę
+    }
+});
+
 // Funkcja usuwająca produkt z listy rozwijanej
 function removeProductFromDropdown(productName) {
     const productSelect = document.getElementById("product");
