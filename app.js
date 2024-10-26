@@ -216,7 +216,7 @@ document.getElementById("helpButton").addEventListener("click", function() {
             <p>Wyczyść - czyści listę wszystkich części, ktore są na Twoim stanie.</p>
             <p>Usuń - usuwa konretna pozycje z listy całkowicie(po usunięciu trzeba dodać ją na nowo.</p>
             <p>Custom - na rozwijanej liście jest napis custom. To jest funkcja dodania nowego produktu do listy.</p>
-            <button id="closeButton">Zamknij</button>
+            <button id="closeButton" style="font-size:5rem">Zamknij</button>
         </body>
         </html>
     `);
