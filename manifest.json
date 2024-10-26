@@ -1,0 +1,23 @@
+{
+    "name": "Checkpoint inventory app",
+    "short_name": "CKP",
+    "start_url": "/magazynowanie",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#3b3b3b",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "icons/192x192.png",
+            "type": "image/png",
+            "sizes": "192x192"
+        },
+        {
+            "src": "icons/512x512.png",
+            "type": "image/png",
+            "sizes": "512x512"
+        }
+
+    ]
+   
+}
