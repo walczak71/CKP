@@ -1,14 +1,52 @@
 // Obsługa formularza dodawania produktów
 document.getElementById("inventoryForm").addEventListener("submit", function(event) {
     event.preventDefault();
-    const product = document.getElementById("product").value;
+
+    const productSelect = document.getElementById("product");
+    const customProductInput = document.getElementById("customProductName");
+    const product = productSelect.value === "Custom" ? customProductInput.value : productSelect.value;
+
     const quantity = parseInt(document.getElementById("quantity").value, 10);
     const minQuantityInput = document.getElementById("minQuantity").value;
-    const minQuantity = minQuantityInput ? parseInt(minQuantityInput, 10) : 0; // Ustaw minimalną ilość
+    const minQuantity = minQuantityInput ? parseInt(minQuantityInput, 10) : 0;
 
     if (product && quantity) {
         addToInventory(product, quantity, minQuantity);
         document.getElementById("inventoryForm").reset();
+        customProductInput.style.display = "none"; // Ukryj pole po dodaniu
+        if (productSelect.value === "Custom") {
+            addProductToDropdown(product); // Dodaj nowy produkt do rozwijanej listy
+        }
+    }
+});
+
+// Funkcja dodająca nową opcję do listy rozwijanej
+function addProductToDropdown(productName) {
+    const productSelect = document.getElementById("product");
+    
+    // Sprawdź, czy produkt już istnieje na liście
+    if (!Array.from(productSelect.options).some(option => option.value === productName) && productName.trim() !== "") {
+        const newOption = document.createElement("option");
+        newOption.value = productName;
+        newOption.textContent = productName;
+
+        productSelect.insertBefore(newOption, productSelect.querySelector('option[value="Custom"]')); // Wstaw przed "Custom"
+    }
+}
+
+// Aktualizacja listy rozwijanej na podstawie zawartości localStorage
+function updateDropdownFromStorage() {
+    const inventory = JSON.parse(localStorage.getItem("inventory")) || [];
+    inventory.forEach(item => addProductToDropdown(item.product)); // Dodaj wszystkie produkty z magazynu
+}
+
+// Obsługa zmiany wyboru produktu
+document.getElementById("product").addEventListener("change", function() {
+    const customProductInput = document.getElementById("customProductName");
+    if (this.value === "Custom") {
+        customProductInput.style.display = "block"; // Pokaż pole dla custom
+    } else {
+        customProductInput.style.display = "none"; // Ukryj, jeśli inny produkt
     }
 });
 
@@ -18,20 +56,19 @@ function addToInventory(product, quantity, minQuantity) {
     const existingProduct = inventory.find(item => item.product === product);
 
     if (existingProduct) {
-        // Jeśli ilość po aktualizacji będzie poniżej 0, wyświetl ostrzeżenie
         if (existingProduct.quantity + quantity < 0) {
-            alert(`Nie masz tyle ${product} baranie!`);
-            return; // Przerwij, jeśli ilość byłaby ujemna
+            alert(`Nie masz tyle ${product}!`);
+            return;
         }
         existingProduct.quantity += quantity;
-        existingProduct.minQuantity = minQuantity || existingProduct.minQuantity; // Aktualizuj minimalną ilość
+        existingProduct.minQuantity = minQuantity || existingProduct.minQuantity;
     } else {
-        // Dodaj nowy produkt, tylko jeśli ilość jest większa od 0
         if (quantity > 0) {
-            inventory.push({ product, quantity, minQuantity }); // Dodaj minimalną ilość
+            inventory.push({ product, quantity, minQuantity });
+            addProductToDropdown(product); // Dodaj nowy produkt do rozwijanej listy
         } else {
             alert("Nie można dodać produktu z ujemną ilością!");
-            return; // Przerwij, jeśli próbujemy dodać produkt z ujemną ilością
+            return;
         }
     }
     
@@ -42,15 +79,14 @@ function addToInventory(product, quantity, minQuantity) {
 // Funkcja aktualizująca listę produktów z podświetleniem minimalnych stanów
 function updateInventoryList() {
     const inventoryList = document.getElementById("productList");
-    inventoryList.innerHTML = ""; // Resetuj listę
+    inventoryList.innerHTML = ""; 
     const inventory = JSON.parse(localStorage.getItem("inventory")) || [];
     inventory.forEach(item => {
         const listItem = document.createElement("li");
         listItem.textContent = `${item.product} - Ilość: ${item.quantity} (Min: ${item.minQuantity || 0})`;
 
-        // Podświetlenie tła, jeśli ilość jest mniejsza lub równa minimalnej ilości
         if (item.quantity <= item.minQuantity) {
-            listItem.style.backgroundColor = 'red'; // Ustaw tło na czerwono
+            listItem.style.backgroundColor = 'red'; // Podświetlenie w przypadku niskiej ilości
         }
 
         listItem.addEventListener("click", () => selectProduct(item.product)); // Dodaj nasłuchiwanie na kliknięcie
@@ -66,6 +102,38 @@ function selectProduct(product) {
     document.getElementById("product").value = product; // Ustaw nazwę produktu w polu
     document.getElementById("quantity").value = ""; // Ustaw ilość na pusty ciąg
     document.getElementById("minQuantity").value = selectedProduct ? selectedProduct.minQuantity : ""; // Ustaw minimalną ilość
+}
+
+// Obsługa przycisku usuwania
+document.getElementById("removeButton").addEventListener("click", function() {
+    const productSelect = document.getElementById("product");
+    const productName = productSelect.value;
+
+    if (productName && productName !== "Custom") {
+        removeProductFromDropdown(productName);
+        removeProductFromInventory(productName);
+        productSelect.value = ""; // Resetuj wybór
+    } else {
+        alert("Wybierz produkt do usunięcia.");
+    }
+});
+
+// Funkcja usuwająca produkt z listy rozwijanej
+function removeProductFromDropdown(productName) {
+    const productSelect = document.getElementById("product");
+    const optionToRemove = Array.from(productSelect.options).find(option => option.value === productName);
+    
+    if (optionToRemove) {
+        productSelect.removeChild(optionToRemove);
+    }
+}
+
+// Funkcja usuwająca produkt z magazynu
+function removeProductFromInventory(productName) {
+    let inventory = JSON.parse(localStorage.getItem("inventory")) || [];
+    inventory = inventory.filter(item => item.product !== productName);
+    localStorage.setItem("inventory", JSON.stringify(inventory));
+    updateInventoryList();
 }
 
 // Obsługa eksportu do pliku XLSX
@@ -87,38 +155,10 @@ document.getElementById("exportButton").addEventListener("click", function() {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Inventory");
 
-    // Dodanie formatowania
-    exportData.forEach((item, index) => {
-        if (item.Minimalna > item.Ilość) {
-            const row = index + 1; // Excel row index (1-based)
-
-            // Ustawienia dla komórek Status i Zamówienie
-            const statusCell = worksheet[XLSX.utils.encode_cell({ r: row, c: 3 })]; // Status
-            const orderCell = worksheet[XLSX.utils.encode_cell({ r: row, c: 4 })]; // Zamówienie
-            
-            if (statusCell) {
-                statusCell.s = {
-                    fill: {
-                        fgColor: { rgb: "FF0000" } // Czerwony kolor tła
-                    }
-                };
-            }
-
-            if (orderCell) {
-                orderCell.s = {
-                    fill: {
-                        fgColor: { rgb: "FF0000" } // Czerwony kolor tła
-                    }
-                };
-            }
-        }
-    });
-
-    // Zapisz plik jako XLSX
+    // Zapisz plik XLSX
     XLSX.writeFile(workbook, "inventory.xlsx");
 });
 
-// Aktualizacja listy produktów przy załadowaniu strony
-window.addEventListener("load", function() {
-    updateInventoryList();
-});
+// Inicjalizacja
+updateDropdownFromStorage();
+updateInventoryList();

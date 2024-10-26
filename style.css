@@ -76,6 +76,18 @@ button:hover {
     background-color: #555;
 }
 
+/* Styl dla formularza */
+#inventoryForm {
+    display: flex;
+    align-items: center; /* Wyrównaj elementy w linii */
+    gap: 1rem; /* Przerwa między polami */
+}
+
+/* Pole dla niestandardowego produktu */
+#customProductName {
+    display: none; /* Ukryj domyślnie */
+}
+
 /* Style responsywne */
 @media (max-width: 768px) {
     .container {
@@ -88,10 +100,14 @@ button:hover {
         width: 80%;
         margin: 10px 0;
     }
+
     #inventoryForm {
-        display: flex;
-        flex-direction: column;
-        gap: 2rem;
-        padding-top: 1rem;
+        flex-direction: column; /* Zmień kierunek na kolumnę na mniejszych ekranach */
+        align-items: stretch; /* Rozciągnij elementy */
+        gap: 1rem; /* Przerwa między polami */
+    }
+
+    #customProduct {
+        width: 100%; /* Zmień szerokość na 100% w trybie mobilnym */
     }
 }

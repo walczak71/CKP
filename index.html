@@ -6,15 +6,14 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
     <link rel="manifest" href="manifest.json">
-   
-
-
     <title>Części CKP</title>
 </head>
 <body>
     <h1>Lista części</h1>
     <div class="container">
         <button id="exportButton">Eksport</button>
+        <button id="clearButton">Wyczyść</button>
+        <button id="removeButton">Usuń</button> <!-- Nowy przycisk do usuwania -->
     </div>
 
     <form id="inventoryForm">
@@ -32,8 +31,11 @@
             <option value="Zasilacz 12V">Zasilacz 12V</option>
             <option value="Wirama 2000">Wirama 2000</option>
             <option value="Router GSM">Router GSM</option>
-            <!-- Dodaj więcej produktów według potrzeb -->
+            <option value="Custom">Custom</option> <!-- Dodano opcję Custom -->
         </select>
+        
+        <input type="text" id="customProductName" placeholder="Wpisz nazwę produktu" />
+        
         <input type="number" id="quantity" placeholder="Ilość" required>
         <input type="number" id="minQuantity" placeholder="Minimalna ilość" required>
         <button type="submit">Aktualizuj</button>
