@@ -157,4 +157,8 @@ input[type="number"] {
         width: 100%; /* Kafelki zajmują 100% szerokości */
         margin: 5px 0; /* Mniejsze marginesy dla lepszego dopasowania */
     }
+
+    .footer p {
+        padding-bottom: 1rem;
+    }
 }
