@@ -1,7 +1,7 @@
 {
     "name": "Checkpoint inventory app",
     "short_name": "CKP",
-    "start_url": "/magazynowanie",
+    "start_url": "/CKP",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#3b3b3b",
