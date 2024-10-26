@@ -124,7 +124,7 @@ document.getElementById("removeButton").addEventListener("click", function() {
 
     // Sprawdź, czy wybrano produkt do usunięcia
     if (productName && productName !== "Custom") {
-        const confirmDelete = confirm(`Czy na pewno chcesz usunąć produkt "${productName}" z listy?`);
+        const confirmDelete = confirm(`Czy na pewno chcesz usunąć ${productName} z listy?`);
         
         // Usuwaj tylko jeśli użytkownik potwierdzi
         if (confirmDelete) {
