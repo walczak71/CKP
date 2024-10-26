@@ -2,7 +2,7 @@
 const predefinedProducts = [
     "Reader RFID", "Detacher RFID", "Pager", "Pilot 4 kanały", 
     "Pilot 2 kanały", "Hyperguard centralka", "Hyperguard płytka", 
-    "CPiD", "Zasilacz 24V", "Zasilacz 12V", "Wirama 2000", "Router GSM"
+    "CPiD", "Zasilacz 24V", "Zasilacz 12V", "Wirama 2000", "Router GSM", "Wirama 1500", "CQR4(rolka)", "CQR6(rolka)", "Kabel USB A" 
 ];
 
 // Obsługa formularza dodawania produktów
@@ -118,7 +118,7 @@ document.getElementById("removeButton").addEventListener("click", function() {
 
     // Zablokuj możliwość usuwania predefiniowanych produktów
     if (predefinedProducts.includes(productName)) {
-        alert("Nie można usunąć predefiniowanego produktu.");
+        alert("Po chuj usuwasz? 😎");
         return;
     }
 
