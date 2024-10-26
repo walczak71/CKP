@@ -1,3 +1,4 @@
+
 // Tablica z predefiniowanymi produktami
 const predefinedProducts = [
     "Reader RFID", "Detacher RFID", "Pager", "Pilot 4 kanały", 
