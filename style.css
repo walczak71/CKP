@@ -143,6 +143,7 @@ input[type="number"] {
 
 .footer p {
     margin: 0;
+    padding-bottom: 1rem;
 }
 /* Dodatkowe style dla kafelków w responsywnym układzie */
 @media (max-width: 500px) {
