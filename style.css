@@ -24,6 +24,7 @@ h1 {
     justify-content: center;
     gap: 20px;
     flex-wrap: wrap;
+    padding-bottom: 2rem;
 }
 
 /* Styl kafelków */
@@ -86,6 +87,23 @@ button:hover {
 /* Pole dla niestandardowego produktu */
 #customProductName {
     display: none; /* Ukryj domyślnie */
+}
+
+input[type="text"],
+select {
+    padding: 10px; /* Powiększenie paddingu */
+    font-size: 1em; /* Zwiększenie rozmiaru czcionki */
+    border: 1px solid #ccc; /* Dodanie obramowania */
+    border-radius: 5px; /* Zaokrąglenie krawędzi */
+}
+
+input[type="number"] {
+    padding: 10px; /* Powiększenie paddingu */
+    font-size: 1.2em; /* Zwiększenie rozmiaru czcionki */
+    border: 1px solid #ccc; /* Dodanie obramowania */
+    border-radius: 5px; /* Zaokrąglenie krawędzi */
+    width: 100%; /* Zmień szerokość na 100% */
+    max-width: 300px; /* Maksymalna szerokość */
 }
 
 /* Style responsywne */
