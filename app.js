@@ -1,10 +1,3 @@
-// Tablica z predefiniowanymi produktami
-const predefinedProducts = [
-    "Reader RFID", "Detacher RFID", "Pager", "Pilot 4 kanały", 
-    "Pilot 2 kanały", "Hyperguard centralka", "Hyperguard płytka", 
-    "CPiD", "Zasilacz 24V", "Zasilacz 12V", "Wirama 2000", "Router GSM"
-];
-
 // Obsługa formularza dodawania produktów
 document.getElementById("inventoryForm").addEventListener("submit", function(event) {
     event.preventDefault();
@@ -96,11 +89,7 @@ function updateInventoryList() {
             listItem.style.backgroundColor = 'red'; // Podświetlenie w przypadku niskiej ilości
         }
 
-        const editButton = document.createElement("button"); // Przycisk edytuj
-        editButton.textContent = "Edytuj";
-        editButton.addEventListener("click", () => openEditWindow(item.product)); // Obsługa otwierania okna edycji
-        listItem.appendChild(editButton);
-
+        listItem.addEventListener("click", () => selectProduct(item.product)); // Dodaj nasłuchiwanie na kliknięcie
         inventoryList.appendChild(listItem);
     });
 }
@@ -115,70 +104,26 @@ function selectProduct(product) {
     document.getElementById("minQuantity").value = selectedProduct ? selectedProduct.minQuantity : ""; // Ustaw minimalną ilość
 }
 
-// Funkcja otwierająca nowe okno edycji
-function openEditWindow(productName) {
-    const inventory = JSON.parse(localStorage.getItem("inventory")) || [];
-    const product = inventory.find(item => item.product === productName);
-
-    if (product) {
-        const editWindow = window.open("", "Edit Product", "width=400,height=300");
-
-        editWindow.document.write(`
-            <html>
-            <head><title>Edytuj ${product.product}</title></head>
-            <body>
-                <h1>Edytuj ${product.product}</h1>
-                <form id="editForm">
-                    <label>Nazwa: ${product.product}</label><br><br>
-                    <label>Ilość:</label>
-                    <input type="number" id="quantity" value="${product.quantity}" disabled><br><br>
-                    <label>Minimalna ilość:</label>
-                    <input type="number" id="minQuantity" value="${product.minQuantity}"><br><br>
-                    <button type="submit">Zapisz</button>
-                </form>
-            </body>
-            </html>
-        `);
-
-        editWindow.document.getElementById("editForm").addEventListener("submit", function(event) {
-            event.preventDefault();
-
-            const updatedQuantity = parseInt(editWindow.document.getElementById("quantity").value, 10);
-            const updatedMinQuantity = parseInt(editWindow.document.getElementById("minQuantity").value, 10);
-
-            product.quantity = updatedQuantity;
-            product.minQuantity = updatedMinQuantity;
-
-            localStorage.setItem("inventory", JSON.stringify(inventory));
-            editWindow.close();
-            updateInventoryList();
-        });
-    }
-}
-
-// Obsługa eksportu do pliku XLSX
-document.getElementById("exportButton").addEventListener("click", exportToExcel);
-function exportToExcel() {
-    const inventory = JSON.parse(localStorage.getItem("inventory")) || [];
-    const workbook = XLSX.utils.book_new();
-    const worksheet = XLSX.utils.json_to_sheet(inventory);
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Inventory");
-
-    XLSX.writeFile(workbook, "inwentory.xlsx");
-}
-
-// Obsługa przycisku usuwania pozycji z listy
+// Obsługa przycisku usuwania
 document.getElementById("removeButton").addEventListener("click", function() {
     const productSelect = document.getElementById("product");
-    const selectedProduct = productSelect.value;
-    
-    if (selectedProduct) {
-        const confirmDelete = confirm(`Czy na pewno chcesz usunąć ${selectedProduct} z listy?`);
-        
-        if (confirmDelete) {
-            removeProductFromDropdown(selectedProduct);
-            removeProductFromInventory(selectedProduct);
-        }
+    const productName = productSelect.value;
+
+    if (productName && productName !== "Custom") {
+        removeProductFromDropdown(productName);
+        removeProductFromInventory(productName);
+        productSelect.value = ""; // Resetuj wybór
+    } else {
+        alert("Wybierz produkt do usunięcia.");
+    }
+});
+
+// Obsługa przycisku czyszczenia
+document.getElementById("clearButton").addEventListener("click", function() {
+    if (confirm("Czy na pewno chcesz wyczyścić całą listę?")) {
+        localStorage.removeItem("inventory"); // Usuń dane z localStorage
+        updateInventoryList(); // Zaktualizuj widok listy
+        document.getElementById("product").selectedIndex = 0; // Resetuj rozwijaną listę
     }
 });
 
@@ -186,7 +131,7 @@ document.getElementById("removeButton").addEventListener("click", function() {
 function removeProductFromDropdown(productName) {
     const productSelect = document.getElementById("product");
     const optionToRemove = Array.from(productSelect.options).find(option => option.value === productName);
-
+    
     if (optionToRemove) {
         productSelect.removeChild(optionToRemove);
     }
@@ -196,10 +141,33 @@ function removeProductFromDropdown(productName) {
 function removeProductFromInventory(productName) {
     let inventory = JSON.parse(localStorage.getItem("inventory")) || [];
     inventory = inventory.filter(item => item.product !== productName);
-    localStorage.setItem("inventory", JSON.stringify(inventory)); // Zaktualizuj localStorage
-    updateInventoryList(); // Odśwież listę produktów
+    localStorage.setItem("inventory", JSON.stringify(inventory));
+    updateInventoryList();
 }
 
-// Wywołanie początkowe aktualizacji
+// Obsługa eksportu do pliku XLSX
+document.getElementById("exportButton").addEventListener("click", function() {
+    const inventory = JSON.parse(localStorage.getItem("inventory")) || [];
+    const exportData = inventory.map(item => {
+        const shortage = item.minQuantity - item.quantity > 0 ? item.minQuantity - item.quantity : 0;
+        const orderText = shortage > 0 ? `Zamówić ${shortage}` : ""; // Tekst o brakującej ilości
+        return {
+            Produkt: item.product,
+            Ilość: item.quantity,
+            Minimalna: item.minQuantity || 0,
+            Status: shortage > 0 ? 'Brak' : 'OK',
+            Zamówienie: orderText // Dodaj informacje o zamówieniu
+        };
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Inventory");
+
+    // Zapisz plik XLSX
+    XLSX.writeFile(workbook, "inventory.xlsx");
+});
+
+// Inicjalizacja
 updateDropdownFromStorage();
 updateInventoryList();
