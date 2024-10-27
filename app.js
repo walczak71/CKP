@@ -237,22 +237,33 @@ document.getElementById("feedbackButton").addEventListener("click", function() {
     window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
 });
 
-function exportToJson() {
+async function exportToJson() {
     const inventory = JSON.parse(localStorage.getItem("inventory")) || [];
-    const blob = new Blob([JSON.stringify(inventory, null, 2)], { type: "application/json" });
-    const fileReader = new FileReader();
+    const jsonContent = JSON.stringify(inventory, null, 2);
 
-    fileReader.onload = function () {
-        const a = document.createElement("a");
-        a.href = fileReader.result;
-        a.download = "inventory.json";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-    };
-
-    fileReader.readAsDataURL(blob);
+    // Sprawdź, czy FileSystem API jest dostępne
+    if (window.showSaveFilePicker) {
+        try {
+            const handle = await window.showSaveFilePicker({
+                suggestedName: "inventory.json",
+                types: [{
+                    description: "JSON file",
+                    accept: { "application/json": [".json"] }
+                }],
+            });
+            const writable = await handle.createWritable();
+            await writable.write(jsonContent);
+            await writable.close();
+            alert("Eksport zakończony pomyślnie!");
+        } catch (error) {
+            alert("Eksport anulowany.");
+        }
+    } else {
+        alert("Eksport nie jest obsługiwany na tym urządzeniu.");
+    }
 }
+
+document.getElementById("exportButton").addEventListener("click", exportToJson);
 
 
 
