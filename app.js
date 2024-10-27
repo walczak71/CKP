@@ -207,7 +207,7 @@ document.getElementById("helpButton").addEventListener("click", function() {
                 p { margin: 10px 0; }
                 #importFileInput {
                     font-size: 1.5 rem;
-                    
+
                 }
                 #closeButton {
                     display: block;
@@ -225,7 +225,7 @@ document.getElementById("helpButton").addEventListener("click", function() {
             <p style="font-size:2rem"><strong>Usuń</strong> - usuwa konkretną pozycję z listy całkowicie (po usunięciu trzeba dodać ją na nowo).</p>
             <p style="font-size:2rem"><strong>Custom</strong> - na rozwijanej liście jest napis custom. To jest funkcja dodania nowego produktu do listy.</p>
             <p style="font-size:2rem"><strong>Import</strong> - zaimportuj stan części z pliku XLSX.</p>
-            <input type="file" id="importFileInput" accept=".xlsx" style="font-size:1.5rem; display: block; margin: 10px auto;" />
+            <input type="file" id="importFileInput" accept=".xlsx" style="font-size:2.5rem; display: block; margin: 10px auto;" />
             <button id="closeButton" style="font-size:2rem; background-color: #333">Zamknij</button>
 
             <script>
