@@ -189,44 +189,86 @@ document.getElementById("exportButton").addEventListener("click", function() {
     XLSX.writeFile(workbook, "inventory.xlsx");
 });
 
-// document.getElementById("helpButton").addEventListener("click", function() {
-//     // Utwórz nowe okno pomocy
-//     const helpWindow = window.open("", "HelpWindow", "width=400,height=600");
+document.getElementById("helpButton").addEventListener("click", function() {
+    // Utwórz nowe okno pomocy
+    const helpWindow = window.open("", "HelpWindow", "width=400,height=600");
 
-//     // Wypełnij zawartość nowego okna
-//     helpWindow.document.write(`
-//         <html>
-//         <head>
-//             <title>Help</title>
-//             <style>
-//                 body { font-family: Arial, sans-serif; padding: 20px; }
-//                 h2 { text-align: center; }
-//                 p { margin: 10px 0; }
-//                 #closeButton {
-//                     display: block;
-//                     margin: 20px auto;
-//                     padding: 10px 20px;
-//                     font-size: 16px;
-//                     cursor: pointer;
-//                 }
-//             </style>
-//         </head>
-//         <body>
-//             <h2 style="font-size:3rem">Jak korzystać z aplikacji</h2>
-//             <p style="font-size:2rem"><strong>Eksport</strong> - eksportuje stan części do pliku excel.</p>
-//             <p style="font-size:2rem"><strong>Wyczyść</strong> - czyści listę wszystkich części, ktore są na Twoim stanie.</p>
-//             <p style="font-size:2rem"><strong>Usuń</strong> - usuwa konretna pozycje z listy całkowicie(po usunięciu trzeba dodać ją na nowo.</p>
-//             <p style="font-size:2rem"><strong>Custom</strong> - na rozwijanej liście jest napis custom. To jest funkcja dodania nowego produktu do listy.</p>
-//             <button id="closeButton" style="font-size:2rem; backgroud-color: #333">Zamknij</button>
-//         </body>
-//         </html>
-//     `);
+    // Wypełnij zawartość nowego okna
+    helpWindow.document.write(`
+        <html>
+        <head>
+            <title>Help</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 20px; }
+                h2 { text-align: center; }
+                p { margin: 10px 0; }
+                #closeButton, #exportButton, #importButton {
+                    display: block;
+                    margin: 20px auto;
+                    padding: 10px 20px;
+                    font-size: 16px;
+                    cursor: pointer;
+                }
+            </style>
+        </head>
+        <body>
+            <h2 style="font-size:3rem">Jak korzystać z aplikacji</h2>
+            <p style="font-size:2rem"><strong>Eksport</strong> - eksportuje stan części do pliku CSV.</p>
+            <p style="font-size:2rem"><strong>Import</strong> - importuje stan części z pliku CSV.</p>
+            <p style="font-size:2rem"><strong>Wyczyść</strong> - czyści listę wszystkich części, które są na Twoim stanie.</p>
+            <p style="font-size:2rem"><strong>Usuń</strong> - usuwa konkretną pozycję z listy całkowicie (po usunięciu trzeba dodać ją na nowo).</p>
+            <p style="font-size:2rem"><strong>Custom</strong> - na rozwijanej liście jest napis custom. To jest funkcja dodania nowego produktu do listy.</p>
+            <button id="exportButton" style="font-size:2rem;">Eksportuj dane</button>
+            <input type="file" id="importButton" style="font-size:2rem; display: block; margin: 20px auto;">
+            <button id="closeButton" style="font-size:2rem; background-color: #333">Zamknij</button>
+        </body>
+        </html>
+    `);
 
-//     // Zamknij okno pomocy po kliknięciu przycisku „Zamknij”
-//     helpWindow.document.getElementById("closeButton").onclick = function() {
-//         helpWindow.close();
-//     };
-// });
+    // Zamknij okno pomocy po kliknięciu przycisku „Zamknij”
+    helpWindow.document.getElementById("closeButton").onclick = function() {
+        helpWindow.close();
+    };
+
+    // Funkcja eksportu do pliku CSV
+    helpWindow.document.getElementById("exportButton").onclick = function() {
+        const inventory = JSON.parse(localStorage.getItem("inventory")) || [];
+        const csvContent = "data:text/csv;charset=utf-8," 
+            + inventory.map(item => `${item.product},${item.quantity},${item.minQuantity || 0}`).join("\n");
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "inventory.csv");
+        document.body.appendChild(link);
+        link.click(); // Wykonaj kliknięcie
+        document.body.removeChild(link); // Usuń link po kliknięciu
+        alert("Eksport zakończony pomyślnie!");
+    };
+
+    // Funkcja importu danych z CSV
+    helpWindow.document.getElementById("importButton").addEventListener("change", function(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const data = event.target.result.split("\n").map(line => {
+                const [product, quantity, minQuantity] = line.split(",");
+                return { product, quantity: Number(quantity), minQuantity: Number(minQuantity) || 0 };
+            });
+
+            localStorage.setItem("inventory", JSON.stringify(data));
+            updateInventoryList();
+            updateDropdownFromStorage();
+            alert("Import zakończony pomyślnie!");
+        };
+        reader.readAsText(file);
+    });
+});
+
+
+
 
 document.getElementById("feedbackButton").addEventListener("click", function() {
     const email = "mateusz.walczak@checkpt.com"; // Wstaw swój adres e-mail
@@ -237,89 +279,6 @@ document.getElementById("feedbackButton").addEventListener("click", function() {
     window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
 });
 
-function exportToJson() {
-    const inventory = JSON.parse(localStorage.getItem("inventory")) || [];
-    const jsonContent = JSON.stringify(inventory, null, 2);
-
-    // Kodowanie JSON do formatu URL
-    const emailBody = encodeURIComponent(jsonContent);
-
-    // Tworzenie linku mailto z JSON w treści wiadomości
-    const mailtoLink = `mailto:?subject=Exported%20Inventory%20Data&body=${emailBody}`;
-
-    // Tworzenie i kliknięcie linku mailto
-    const mailtoAnchor = document.createElement("a");
-    mailtoAnchor.href = mailtoLink;
-    mailtoAnchor.click();
-}
-
-// Przypisanie funkcji do przycisku eksportu
-document.getElementById("exportButton").addEventListener("click", exportToJson);
-
-
-
-// Funkcja importu danych z JSON
-function importFromJson(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = function(event) {
-        try {
-            const importedData = JSON.parse(event.target.result);
-            localStorage.setItem("inventory", JSON.stringify(importedData));
-            updateInventoryList();
-            updateDropdownFromStorage();
-            alert("Import zakończony pomyślnie!");
-        } catch (e) {
-            alert("Błąd podczas importu. Upewnij się, że plik jest poprawny.");
-        }
-    };
-    reader.readAsText(file);
-}
-
-document.getElementById("helpButton").addEventListener("click", function() {
-    // Tworzenie nowego okna pomocy
-    const helpWindow = window.open("", "HelpWindow", "width=400,height=600");
-    helpWindow.document.write(`
-        <html>
-        <head>
-            <title>Pomoc</title>
-            <style>
-                body { font-family: Arial, sans-serif; padding: 20px; }
-                h2 { text-align: center; }
-                p { margin: 10px 0; }
-                #closeButton {
-                    display: block;
-                    margin: 20px auto;
-                    padding: 10px 20px;
-                    font-size: 16px;
-                    cursor: pointer;
-                }
-                #importFileInput {
-                    display: none;
-                }
-            </style>
-        </head>
-        <body>
-            <h2 style="font-size:3rem">Jak korzystać z aplikacji</h2>
-            <p style="font-size:2rem"><strong>Eksport</strong> - eksportuje stan części do pliku excel.</p>
-            <p style="font-size:2rem"><strong>Wyczyść</strong> - czyści listę wszystkich części, które są na Twoim stanie.</p>
-            <p style="font-size:2rem"><strong>Usuń</strong> - usuwa konretną pozycję z listy całkowicie (po usunięciu trzeba dodać ją na nowo).</p>
-            <p style="font-size:2rem"><strong>Custom</strong> - na rozwijanej liście jest napis custom. To jest funkcja dodania nowego produktu do listy.</p>
-            <p style="font-size:2rem"><strong>Eksport JSON</strong> - <button onclick="window.opener.exportToJson()">Eksport do JSON</button></p>
-            <p style="font-size:2rem"><strong>Import JSON</strong> - <button onclick="document.getElementById('importFileInput').click()">Importuj z JSON</button></p>
-            <input type="file" id="importFileInput" onchange="window.opener.importFromJson(event)">
-            <button id="closeButton" style="font-size:2rem; backgroud-color: #333">Zamknij</button>
-        </body>
-        </html>
-    `);
-
-    // Zamknij okno pomocy po kliknięciu przycisku „Zamknij”
-    helpWindow.document.getElementById("closeButton").onclick = function() {
-        helpWindow.close();
-    };
-});
 
 
 // Inicjalizacja
