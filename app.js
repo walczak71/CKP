@@ -237,21 +237,25 @@ document.getElementById("feedbackButton").addEventListener("click", function() {
     window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
 });
 
-// Funkcja eksportu danych do JSON
-document.getElementById("exportButton").addEventListener("click", function () {
+function exportToJson() {
     const inventory = JSON.parse(localStorage.getItem("inventory")) || [];
+    const blob = new Blob([JSON.stringify(inventory, null, 2)], { type: "application/json" });
+    const fileReader = new FileReader();
 
-    // Tworzenie danych JSON i konwersja do formatu data URI
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(inventory));
-    const downloadAnchorNode = document.createElement("a");
-    downloadAnchorNode.setAttribute("href", dataStr);
-    downloadAnchorNode.setAttribute("download", "inventory.json");
+    fileReader.onload = function () {
+        const a = document.createElement("a");
+        a.href = fileReader.result;
+        a.download = "inventory.json";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    };
 
-    // Dołączenie do DOM, kliknięcie i usunięcie elementu
-    document.body.appendChild(downloadAnchorNode);
-    downloadAnchorNode.click();
-    downloadAnchorNode.remove();
-});
+    fileReader.readAsDataURL(blob);
+}
+
+document.getElementById("exportButton").addEventListener("click", exportToJson);
+
 
 
 // Funkcja importu danych z JSON
