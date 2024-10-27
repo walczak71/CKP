@@ -237,32 +237,30 @@ document.getElementById("feedbackButton").addEventListener("click", function() {
     window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
 });
 
-async function exportToJson() {
+function exportToJson() {
     const inventory = JSON.parse(localStorage.getItem("inventory")) || [];
     const jsonContent = JSON.stringify(inventory, null, 2);
+    
+    // Utwórz obiekt Blob z treścią JSON
+    const blob = new Blob([jsonContent], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
 
-    // Sprawdź, czy FileSystem API jest dostępne
-    if (window.showSaveFilePicker) {
-        try {
-            const handle = await window.showSaveFilePicker({
-                suggestedName: "inventory.json",
-                types: [{
-                    description: "JSON file",
-                    accept: { "application/json": [".json"] }
-                }],
-            });
-            const writable = await handle.createWritable();
-            await writable.write(jsonContent);
-            await writable.close();
-            alert("Eksport zakończony pomyślnie!");
-        } catch (error) {
-            alert("Eksport anulowany.");
-        }
-    } else {
-        alert("Eksport nie jest obsługiwany na tym urządzeniu.");
-    }
+    // Tworzenie i symulowanie kliknięcia na link do pobrania
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "inventory.json";
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+
+    // Czystka i zwolnienie pamięci
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    alert("Eksport zakończony pomyślnie!");
 }
 
+// Przypisz funkcję do przycisku eksportu
 document.getElementById("exportButton").addEventListener("click", exportToJson);
 
 
