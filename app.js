@@ -53,8 +53,10 @@ document.getElementById("product").addEventListener("change", function() {
     const customProductInput = document.getElementById("customProductName");
     if (this.value === "Custom") {
         customProductInput.style.display = "block"; // Pokaż pole dla custom
+      
     } else {
         customProductInput.style.display = "none"; // Ukryj, jeśli inny produkt
+        
     }
 });
 
@@ -198,6 +200,7 @@ document.getElementById("helpButton").addEventListener("click", function() {
         <html>
         <head>
             <title>Help</title>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
             <style>
                 body { font-family: Arial, sans-serif; padding: 20px; }
                 h2 { text-align: center; }
@@ -213,20 +216,59 @@ document.getElementById("helpButton").addEventListener("click", function() {
         </head>
         <body>
             <h2 style="font-size:3rem">Jak korzystać z aplikacji</h2>
-            <p style="font-size:2rem"><strong>Eksport</strong> - eksportuje stan części do pliku excel.</p>
-            <p style="font-size:2rem"><strong>Wyczyść</strong> - czyści listę wszystkich części, ktore są na Twoim stanie.</p>
-            <p style="font-size:2rem"><strong>Usuń</strong> - usuwa konretna pozycje z listy całkowicie(po usunięciu trzeba dodać ją na nowo.</p>
+            <p style="font-size:2rem"><strong>Eksport</strong> - eksportuje stan części do pliku Excel.</p>
+            <p style="font-size:2rem"><strong>Wyczyść</strong> - czyści listę wszystkich części, które są na Twoim stanie.</p>
+            <p style="font-size:2rem"><strong>Usuń</strong> - usuwa konkretną pozycję z listy całkowicie (po usunięciu trzeba dodać ją na nowo).</p>
             <p style="font-size:2rem"><strong>Custom</strong> - na rozwijanej liście jest napis custom. To jest funkcja dodania nowego produktu do listy.</p>
-            <button id="closeButton" style="font-size:2rem; backgroud-color: #333">Zamknij</button>
+            <p style="font-size:2rem"><strong>Import</strong> - zaimportuj stan części z pliku XLSX.</p>
+            <input type="file" id="importFileInput" accept=".xlsx" style="font-size:1.5rem; display: block; margin: 10px auto;" />
+            <button id="closeButton" style="font-size:2rem; background-color: #333">Zamknij</button>
+
+            <script>
+                // Funkcja importu danych z XLSX
+                document.getElementById("importFileInput").onchange = function(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: "array" });
+
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+
+                        const inventoryData = jsonData.map(row => ({
+                            product: row["Produkt"],
+                            quantity: row["Ilość"],
+                            minQuantity: row["Minimalna"]
+                        }));
+
+                        localStorage.setItem("inventory", JSON.stringify(inventoryData));
+                        alert("Import zakończony pomyślnie!");
+                        updateInventoryList();  // Automatyczna aktualizacja listy
+                    };
+                    reader.readAsArrayBuffer(file);
+                };
+
+                // Funkcja aktualizacji listy
+                function updateInventoryList() {
+                    const inventoryList = JSON.parse(localStorage.getItem("inventory")) || [];
+                    // Tutaj należy zaktualizować widok listy w aplikacji
+                    // Poniżej dodaj swój kod aktualizacji UI
+                }
+
+                // Zamknij okno pomocy po kliknięciu przycisku „Zamknij”
+                document.getElementById("closeButton").onclick = function() {
+                    window.close();
+                };
+            </script>
         </body>
         </html>
     `);
-
-    // Zamknij okno pomocy po kliknięciu przycisku „Zamknij”
-    helpWindow.document.getElementById("closeButton").onclick = function() {
-        helpWindow.close();
-    };
 });
+
+
 
 
 
