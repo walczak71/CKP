@@ -254,8 +254,6 @@ function exportToJson() {
     fileReader.readAsDataURL(blob);
 }
 
-document.getElementById("exportButton").addEventListener("click", exportToJson);
-
 
 
 // Funkcja importu danych z JSON
