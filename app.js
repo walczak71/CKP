@@ -205,6 +205,10 @@ document.getElementById("helpButton").addEventListener("click", function() {
                 body { font-family: Arial, sans-serif; padding: 20px; }
                 h2 { text-align: center; }
                 p { margin: 10px 0; }
+                #importFileInput {
+                    font-size: 1.5 rem;
+                    
+                }
                 #closeButton {
                     display: block;
                     margin: 20px auto;
