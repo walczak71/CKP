@@ -256,8 +256,7 @@ document.getElementById("helpButton").addEventListener("click", function() {
                 // Funkcja aktualizacji listy
                 function updateInventoryList() {
                     const inventoryList = JSON.parse(localStorage.getItem("inventory")) || [];
-                    // Tutaj należy zaktualizować widok listy w aplikacji
-                    // Poniżej dodaj swój kod aktualizacji UI
+                    updateInventoryList();
                 }
 
                 // Zamknij okno pomocy po kliknięciu przycisku „Zamknij”
