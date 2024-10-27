@@ -3,7 +3,7 @@
 const predefinedProducts = [
     "Reader RFID", "Detacher RFID", "Pager", "Pilot 4 kanały", 
     "Pilot 2 kanały", "Hyperguard centralka", "Hyperguard płytka", 
-    "CPiD", "Zasilacz 24V", "Zasilacz 12V", "Wirama 2000", "Router GSM", "Wirama 1500", "CQR4(rolka)", "CQR6(rolka)", "Kabel USB A" 
+    "CPiD", "Zasilacz 24V", "Zasilacz 12V", "Wirama 2000", "Router GSM", "Wirama 1500", "CQR4(rolka)", "CQR6(rolka)", "Kabel USB A", "TR4240", "TR7240", "SOM NP10", "SOM NP20", "Elektronika 3G", "Elmes 2 kanały", "Elmes 4 kanały" 
 ];
 
 // Obsługa formularza dodawania produktów
