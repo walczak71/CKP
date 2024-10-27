@@ -96,7 +96,8 @@ button:hover {
 
 /* Pole dla niestandardowego produktu */
 #customProductName {
-    display: none; /* Ukryj domyślnie */
+    display: none; 
+   
 }
 
 input[type="text"],
