@@ -212,6 +212,7 @@ document.getElementById("helpButton").addEventListener("click", function() {
                     padding: 10px 20px;
                     font-size: 16px;
                     cursor: pointer;
+                    border-radius: 5px;
                 }
             </style>
         </head>
