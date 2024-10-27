@@ -241,27 +241,16 @@ function exportToJson() {
     const inventory = JSON.parse(localStorage.getItem("inventory")) || [];
     const jsonContent = JSON.stringify(inventory, null, 2);
 
-    // Utwórz pole tekstowe do skopiowania danych JSON
-    const exportArea = document.createElement("textarea");
-    exportArea.value = jsonContent;
-    exportArea.style.width = "100%";
-    exportArea.style.height = "200px";
-    exportArea.readOnly = true;
+    // Kodowanie JSON do formatu URL
+    const emailBody = encodeURIComponent(jsonContent);
 
-    // Wyświetl okno dialogowe do skopiowania
-    const exportWindow = window.open("", "ExportWindow", "width=400,height=300");
-    exportWindow.document.write(`
-        <html>
-        <head>
-            <title>Eksport danych</title>
-        </head>
-        <body>
-            <h2>Eksportuj dane do JSON</h2>
-            <p>Skopiuj dane poniżej i zapisz jako plik .json:</p>
-        </body>
-        </html>
-    `);
-    exportWindow.document.body.appendChild(exportArea);
+    // Tworzenie linku mailto z JSON w treści wiadomości
+    const mailtoLink = `mailto:?subject=Exported%20Inventory%20Data&body=${emailBody}`;
+
+    // Tworzenie i kliknięcie linku mailto
+    const mailtoAnchor = document.createElement("a");
+    mailtoAnchor.href = mailtoLink;
+    mailtoAnchor.click();
 }
 
 // Przypisanie funkcji do przycisku eksportu
