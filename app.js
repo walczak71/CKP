@@ -240,27 +240,12 @@ document.getElementById("feedbackButton").addEventListener("click", function() {
 function exportToJson() {
     const inventory = JSON.parse(localStorage.getItem("inventory")) || [];
     const jsonContent = JSON.stringify(inventory, null, 2);
-    
-    // Utwórz obiekt Blob z treścią JSON
-    const blob = new Blob([jsonContent], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
 
-    // Tworzenie i symulowanie kliknięcia na link do pobrania
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "inventory.json";
-    a.style.display = "none";
-    document.body.appendChild(a);
-    a.click();
-
-    // Czystka i zwolnienie pamięci
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    alert("Eksport zakończony pomyślnie!");
+    // Wyświetlenie danych JSON do ręcznego skopiowania
+    alert("Skopiuj dane poniżej i zapisz je jako plik JSON:\n\n" + jsonContent);
 }
 
-// Przypisz funkcję do przycisku eksportu
+// Przypisanie funkcji do przycisku eksportu
 document.getElementById("exportButton").addEventListener("click", exportToJson);
 
 
