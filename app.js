@@ -196,6 +196,61 @@ document.getElementById("exportButton").addEventListener("click", async function
     XLSX.writeFile(workbook, 'inventory.xlsx');
 });
 
+// Obsługa przycisku feedback
+document.getElementById("feedbackButton").addEventListener("click", function() {
+    const recipientEmail = "mateusz.walczak@checkpt.com"; // Zastąp swoim adresem e-mail
+    const subject = "Feedback z aplikacji magazynowej"; // Ustaw tytuł e-maila
+    const body = ""; // Opcjonalny domyślny tekst wiadomości
+
+    // Otwórz okno poczty z predefiniowanymi wartościami
+    window.location.href = `mailto:${recipientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+});
+
+// Obsługa przycisku "Help"
+document.getElementById("helpButton").addEventListener("click", function() {
+    // Tutaj możesz dostosować treść okna pomocy
+    const helpMessage = `
+        <h2>Pomoc</h2>
+        <p>Aby dodać produkt do magazynu:</p>
+        <ol>
+            <li>Wybierz produkt z listy rozwijanej lub wprowadź niestandardową nazwę.</li>
+            <li>Wprowadź ilość i minimalny stan.</li>
+            <li>Kliknij "Dodaj".</li>
+        </ol>
+        <p>Aby usunąć produkt, wybierz go z listy rozwijanej i kliknij "Usuń".</p>
+        <p>Aby wyczyścić magazyn, kliknij "Wyczyść".</p>
+        <p>Aby eksportować dane, kliknij "Eksportuj".</p>
+    `;
+
+    // Tworzenie okna dialogowego
+    const helpWindow = document.createElement("div");
+    helpWindow.style.position = "fixed";
+    helpWindow.style.top = "50%";
+    helpWindow.style.left = "50%";
+    helpWindow.style.transform = "translate(-50%, -50%)";
+    helpWindow.style.backgroundColor = "white";
+    helpWindow.style.padding = "20px";
+    helpWindow.style.boxShadow = "0 0 10px rgba(0, 0, 0, 0.5)";
+    helpWindow.style.zIndex = "1000";
+
+    // Dodawanie treści do okna pomocy
+    helpWindow.innerHTML = helpMessage;
+
+    // Dodawanie przycisku do zamknięcia okna
+    const closeButton = document.createElement("button");
+    closeButton.textContent = "Zamknij";
+    closeButton.style.marginTop = "10px";
+    closeButton.addEventListener("click", function() {
+        document.body.removeChild(helpWindow); // Usuń okno po kliknięciu
+    });
+
+    helpWindow.appendChild(closeButton);
+    document.body.appendChild(helpWindow); // Dodaj okno do ciała dokumentu
+});
+
+// Reszta kodu (np. inicjalizacja, obsługa formularza itp.) pozostaje bez zmian...
+
+
 // Inicjalizacja elementów DOM
 document.addEventListener('DOMContentLoaded', () => {
     // Inicjalizacja przycisków
