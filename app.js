@@ -1,289 +1,167 @@
+// Inicjalizacja Supabase
+const SUPABASE_URL = 'https://gdjvdgonmsttuwkbkwor.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdkanZkZ29ubXN0dHV3a2Jrd29yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjk5NzMzNDAsImV4cCI6MjA0NTU0OTM0MH0.xGkWeOOgrPk0G-kzaeao6Ki5L8E-5Nb-K5jcjWdkyRw';
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Tablica z predefiniowanymi produktami
 const predefinedProducts = [
-    "Reader RFID", "Detacher RFID", "Pager", "Pilot 4 kanały", 
-    "Pilot 2 kanały", "Hyperguard centralka", "Hyperguard płytka", 
-    "CPiD", "Zasilacz 24V", "Zasilacz 12V", "Wirama 2000", "Router GSM", "Wirama 1500", "CQR4(rolka)", "CQR6(rolka)", "Kabel USB A", "TR4240", "TR7240", "SOM NP10", "SOM NP20", "Elektronika 3G", "Elmes 2 kanały", "Elmes 4 kanały" 
+    "Reader RFID", "Detacher RFID", "Pager", "Pilot 4 kanały", "Pilot 2 kanały", "Hyperguard centralka", 
+    "Hyperguard płytka", "CPiD", "Zasilacz 24V", "Zasilacz 12V", "Wirama 2000", "Router GSM", 
+    "Wirama 1500", "CQR4(rolka)", "CQR6(rolka)", "Kabel USB A", "TR4240", "TR7240", "SOM NP10", 
+    "SOM NP20", "Elektronika 3G", "Elmes 2 kanały", "Elmes 4 kanały" 
 ];
 
+// Inicjalizacja danych
+document.addEventListener('DOMContentLoaded', () => {
+    loadInventory();
+});
+
 // Obsługa formularza dodawania produktów
-document.getElementById("inventoryForm").addEventListener("submit", function(event) {
+document.getElementById("inventoryForm").addEventListener("submit", async function(event) {
     event.preventDefault();
 
     const productSelect = document.getElementById("product");
     const customProductInput = document.getElementById("customProductName");
     const product = productSelect.value === "Custom" ? customProductInput.value : productSelect.value;
-
     const quantity = parseInt(document.getElementById("quantity").value, 10);
-    const minQuantityInput = document.getElementById("minQuantity").value;
-    const minQuantity = minQuantityInput ? parseInt(minQuantityInput, 10) : 0;
+    const minQuantity = parseInt(document.getElementById("minQuantity").value, 10) || 0;
 
     if (product && quantity) {
-        addToInventory(product, quantity, minQuantity);
+        await addToInventory(product, quantity, minQuantity);
         document.getElementById("inventoryForm").reset();
-        customProductInput.style.display = "none"; // Ukryj pole po dodaniu
-        if (productSelect.value === "Custom") {
-            addProductToDropdown(product); // Dodaj nowy produkt do rozwijanej listy
-        }
+        customProductInput.style.display = "none"; 
+        if (productSelect.value === "Custom") addProductToDropdown(product);
     }
 });
 
-// Funkcja dodająca nową opcję do listy rozwijanej
+// Dodawanie produktu do listy rozwijanej
 function addProductToDropdown(productName) {
     const productSelect = document.getElementById("product");
-    
-    // Sprawdź, czy produkt już istnieje na liście
     if (!Array.from(productSelect.options).some(option => option.value === productName) && productName.trim() !== "") {
         const newOption = document.createElement("option");
         newOption.value = productName;
         newOption.textContent = productName;
-
-        productSelect.insertBefore(newOption, productSelect.querySelector('option[value="Custom"]')); // Wstaw przed "Custom"
+        productSelect.insertBefore(newOption, productSelect.querySelector('option[value="Custom"]'));
     }
 }
 
-// Aktualizacja listy rozwijanej na podstawie zawartości localStorage
-function updateDropdownFromStorage() {
-    const inventory = JSON.parse(localStorage.getItem("inventory")) || [];
-    inventory.forEach(item => addProductToDropdown(item.product)); // Dodaj wszystkie produkty z magazynu
-}
-
-// Obsługa zmiany wyboru produktu
-document.getElementById("product").addEventListener("change", function() {
-    const customProductInput = document.getElementById("customProductName");
-    if (this.value === "Custom") {
-        customProductInput.style.display = "block"; // Pokaż pole dla custom
-      
+// Wczytywanie danych magazynowych z Supabase
+async function loadInventory() {
+    const { data, error } = await supabaseClient.from('inventory').select('*');
+    if (error) {
+        console.error('Błąd wczytywania danych:', error);
     } else {
-        customProductInput.style.display = "none"; // Ukryj, jeśli inny produkt
-        
+        data.forEach(item => addProductToDropdown(item.product));
+        updateInventoryList(data);
     }
-});
+}
 
-// Funkcja dodająca produkt do magazynu i zapisująca go w localStorage
-function addToInventory(product, quantity, minQuantity) {
-    const inventory = JSON.parse(localStorage.getItem("inventory")) || [];
-    const existingProduct = inventory.find(item => item.product === product);
+// Dodawanie produktu do magazynu i zapis w Supabase
+async function addToInventory(product, quantity, minQuantity) {
+    const { data, error } = await supabaseClient.from('inventory').select('*').eq('product', product).single();
+    if (error && error.code !== 'PGRST116') {
+        console.error('Błąd pobierania produktu:', error);
+        return;
+    }
 
-    if (existingProduct) {
-        if (existingProduct.quantity + quantity < 0) {
+    if (data) {
+        const newQuantity = data.quantity + quantity;
+        if (newQuantity < 0) {
             alert(`Nie masz tyle ${product}!`);
             return;
         }
-        existingProduct.quantity += quantity;
-        existingProduct.minQuantity = minQuantity || existingProduct.minQuantity;
+
+        await supabaseClient.from('inventory').update({ quantity: newQuantity, minQuantity: minQuantity || data.minQuantity }).eq('product', product);
     } else {
         if (quantity > 0) {
-            inventory.push({ product, quantity, minQuantity });
-            addProductToDropdown(product); // Dodaj nowy produkt do rozwijanej listy
+            await supabaseClient.from('inventory').insert([{ product, quantity, minQuantity: minQuantity }]);
+            addProductToDropdown(product);
         } else {
             alert("Nie można dodać produktu z ujemną ilością!");
             return;
         }
     }
-    
-    localStorage.setItem("inventory", JSON.stringify(inventory));
-    updateInventoryList();
+    loadInventory();
 }
 
-// Funkcja aktualizująca listę produktów z podświetleniem minimalnych stanów
-function updateInventoryList() {
+// Aktualizacja listy produktów z podświetleniem niskich stanów
+function updateInventoryList(data) {
     const inventoryList = document.getElementById("productList");
-    inventoryList.innerHTML = ""; 
-    const inventory = JSON.parse(localStorage.getItem("inventory")) || [];
-    inventory.forEach(item => {
+    inventoryList.innerHTML = "";
+
+    data.forEach(item => {
         const listItem = document.createElement("li");
         listItem.textContent = `${item.product} - Ilość: ${item.quantity} (Min: ${item.minQuantity || 0})`;
 
         if (item.quantity <= item.minQuantity) {
-            listItem.style.backgroundColor = 'red'; // Podświetlenie w przypadku niskiej ilości
+            listItem.style.backgroundColor = 'red';
         }
-
-        listItem.addEventListener("click", () => selectProduct(item.product)); // Dodaj nasłuchiwanie na kliknięcie
         inventoryList.appendChild(listItem);
     });
 }
 
-// Funkcja wyboru produktu do edycji
-function selectProduct(product) {
-    const inventory = JSON.parse(localStorage.getItem("inventory")) || [];
-    const selectedProduct = inventory.find(item => item.product === product);
-
-    document.getElementById("product").value = product; // Ustaw nazwę produktu w polu
-    document.getElementById("quantity").value = ""; // Ustaw ilość na pusty ciąg
-    document.getElementById("minQuantity").value = selectedProduct ? selectedProduct.minQuantity : ""; // Ustaw minimalną ilość
+// Usuwanie produktu
+async function removeProduct(productName) {
+    const { error } = await supabaseClient.from('inventory').delete().eq('product', productName);
+    if (error) {
+        console.error('Błąd usuwania produktu:', error);
+    } else {
+        loadInventory();
+    }
 }
 
 // Obsługa przycisku usuwania
-document.getElementById("removeButton").addEventListener("click", function() {
+document.getElementById("removeButton").addEventListener("click", async function() {
     const productSelect = document.getElementById("product");
     const productName = productSelect.value;
 
-    // Sprawdź, czy produkt jest predefiniowany
     if (predefinedProducts.includes(productName)) {
-        alert("Po chuj usuwasz? 😎");
+        alert("Nie można usunąć tego produktu.");
         return;
     }
 
-    // Sprawdź, czy wybrano produkt do usunięcia
     if (productName && productName !== "Custom") {
         const confirmDelete = confirm(`Czy na pewno chcesz usunąć ${productName} z listy?`);
-        
-        // Usuwaj tylko jeśli użytkownik potwierdzi
         if (confirmDelete) {
-            removeProductFromDropdown(productName);
-            removeProductFromInventory(productName);
-            productSelect.value = ""; // Resetuj wybór
+            await removeProduct(productName);
+            productSelect.value = "";
         }
     } else {
         alert("Wybierz produkt do usunięcia.");
     }
 });
 
-
 // Obsługa przycisku czyszczenia
-document.getElementById("clearButton").addEventListener("click", function() {
+document.getElementById("clearButton").addEventListener("click", async function() {
     if (confirm("Czy na pewno chcesz wyczyścić całą listę?")) {
-        localStorage.removeItem("inventory"); // Usuń dane z localStorage
-        updateInventoryList(); // Zaktualizuj widok listy
-        document.getElementById("product").selectedIndex = 0; // Resetuj rozwijaną listę
+        const { error } = await supabaseClient.from('inventory').delete();
+        if (error) {
+            console.error('Błąd czyszczenia magazynu:', error);
+        } else {
+            loadInventory();
+        }
     }
 });
 
-// Funkcja usuwająca produkt z listy rozwijanej
-function removeProductFromDropdown(productName) {
-    const productSelect = document.getElementById("product");
-    const optionToRemove = Array.from(productSelect.options).find(option => option.value === productName);
-
-    if (optionToRemove) {
-        productSelect.removeChild(optionToRemove);
-    }
-}
-
-// Funkcja usuwająca produkt z magazynu
-function removeProductFromInventory(productName) {
-    let inventory = JSON.parse(localStorage.getItem("inventory")) || [];
-    inventory = inventory.filter(item => item.product !== productName);
-    localStorage.setItem("inventory", JSON.stringify(inventory)); // Zaktualizuj localStorage
-    updateInventoryList(); // Odśwież listę produktów
-}
-
 // Funkcja eksportu danych do XLSX
-document.getElementById("exportButton").addEventListener("click", function() {
-    const inventory = JSON.parse(localStorage.getItem("inventory")) || [];
-    const exportData = inventory.map(item => {
-        const shortage = item.minQuantity - item.quantity > 0 ? item.minQuantity - item.quantity : 0;
-        const orderText = shortage > 0 ? `Zamówić ${shortage}` : ""; // Tekst o brakującej ilości
-        return {
-            Produkt: item.product,
-            Ilość: item.quantity,
-            Minimalna: item.minQuantity || 0,
-            Status: shortage > 0 ? 'Brak' : 'OK',
-            Zamówienie: orderText // Dodaj informacje o zamówieniu
-        };
-    });
+document.getElementById("exportButton").addEventListener("click", async function() {
+    const { data, error } = await supabaseClient.from('inventory').select('*');
+    if (error) {
+        console.error('Błąd pobierania danych do eksportu:', error);
+        return;
+    }
+
+    const exportData = data.map(item => ({
+        Produkt: item.product,
+        Ilość: item.quantity,
+        Minimalna: item.minQuantity || 0,
+        Status: item.quantity <= item.minQuantity ? 'Brak' : 'OK',
+        Zamówienie: item.quantity <= item.minQuantity ? `Zamówić ${item.minQuantity - item.quantity}` : ""
+    }));
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Inventory");
 
-    // Zapisz plik XLSX
     XLSX.writeFile(workbook, "inventory.xlsx");
 });
-
-document.getElementById("helpButton").addEventListener("click", function() {
-    // Utwórz nowe okno pomocy
-    const helpWindow = window.open("", "HelpWindow", "width=400,height=600");
-
-    // Wypełnij zawartość nowego okna
-    helpWindow.document.write(`
-        <html>
-        <head>
-            <title>Help</title>
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
-            <style>
-                body { font-family: Arial, sans-serif; padding: 20px; }
-                h2 { text-align: center; }
-                p { margin: 10px 0; }
-             
-                #closeButton {
-                    display: block;
-                    margin: 20px auto;
-                    padding: 10px 20px;
-                    font-size: 16px;
-                    cursor: pointer;
-                    border-radius: 5px;
-                }
-            </style>
-        </head>
-        <body>
-            <h2 style="font-size:3rem">Jak korzystać z aplikacji</h2>
-            <p style="font-size:2rem"><strong>Eksport</strong> - eksportuje stan części do pliku Excel.</p>
-            <p style="font-size:2rem"><strong>Wyczyść</strong> - czyści listę wszystkich części, które są na Twoim stanie.</p>
-            <p style="font-size:2rem"><strong>Usuń</strong> - usuwa konkretną pozycję z listy całkowicie (po usunięciu trzeba dodać ją na nowo).</p>
-            <p style="font-size:2rem"><strong>Custom</strong> - na rozwijanej liście jest napis custom. To jest funkcja dodania nowego produktu do listy.</p>
-            <p style="font-size:2rem"><strong>Import</strong> - zaimportuj stan części z pliku XLSX.</p>
-            <input type="file" id="importFileInput" accept=".xlsx" style="font-size:2.5rem; display: block; margin: 10px auto; padding-top: 2rem;" />
-            <button id="closeButton" style="font-size:2rem; background-color: #333; opacity: 0.6;">Zamknij</button>
-
-            <script>
-                // Funkcja importu danych z XLSX
-                document.getElementById("importFileInput").onchange = function(event) {
-                    const file = event.target.files[0];
-                    if (!file) return;
-
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const data = new Uint8Array(e.target.result);
-                        const workbook = XLSX.read(data, { type: "array" });
-
-                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                        const jsonData = XLSX.utils.sheet_to_json(firstSheet);
-
-                        const inventoryData = jsonData.map(row => ({
-                            product: row["Produkt"],
-                            quantity: row["Ilość"],
-                            minQuantity: row["Minimalna"]
-                        }));
-
-                        localStorage.setItem("inventory", JSON.stringify(inventoryData));
-                        alert("Import zakończony pomyślnie!");
-                        updateInventoryList();  // Automatyczna aktualizacja listy
-                    };
-                    reader.readAsArrayBuffer(file);
-                };
-
-                // Funkcja aktualizacji listy
-                function updateInventoryList() {
-                    const inventoryList = JSON.parse(localStorage.getItem("inventory")) || [];
-                    updateInventoryList();
-                }
-
-                // Zamknij okno pomocy po kliknięciu przycisku „Zamknij”
-                document.getElementById("closeButton").onclick = function() {
-                    window.close();
-                };
-            </script>
-        </body>
-        </html>
-    `);
-});
-
-
-
-
-
-document.getElementById("feedbackButton").addEventListener("click", function() {
-    const email = "mateusz.walczak@checkpt.com"; // Wstaw swój adres e-mail
-    const subject = encodeURIComponent("Feedback odnośnie aplikacji magazynowej"); // Temat wiadomości
-    const body = encodeURIComponent(""); // Przykładowa treść wiadomości
-    
-    // Otwórz aplikację pocztową z wstępnie wypełnionymi danymi
-    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-});
-
-
-
-// Inicjalizacja
-updateDropdownFromStorage();
-updateInventoryList();
