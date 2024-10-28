@@ -3,6 +3,7 @@ const SUPABASE_URL = 'https://gdjvdgonmsttuwkbkwor.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdkanZkZ29ubXN0dHV3a2Jrd29yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjk5NzMzNDAsImV4cCI6MjA0NTU0OTM0MH0.xGkWeOOgrPk0G-kzaeao6Ki5L8E-5Nb-K5jcjWdkyRw';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+
 // Tablica z predefiniowanymi produktami
 const predefinedProducts = [
     "Reader RFID", "Detacher RFID", "Pager", "Pilot 4 kanały", "Pilot 2 kanały", "Hyperguard centralka", 
@@ -14,6 +15,20 @@ const predefinedProducts = [
 // Inicjalizacja danych
 document.addEventListener('DOMContentLoaded', () => {
     loadInventory();
+
+    // Obsługa zmiany wyboru produktu
+    const productSelect = document.getElementById("product");
+    const customProductInput = document.getElementById("customProductName");
+
+    productSelect.addEventListener('change', function() {
+        if (productSelect.value === "Custom") {
+            customProductInput.style.display = "block"; // Pokaż pole do wprowadzenia nazwy
+            customProductInput.value = ""; // Wyczyść pole, aby użytkownik mógł wpisać nową nazwę
+        } else {
+            customProductInput.style.display = "none"; // Ukryj pole, jeśli inny produkt jest wybrany
+            customProductInput.value = ""; // Wyczyść pole, aby nie pozostawiać starej wartości
+        }
+    });
 });
 
 // Obsługa formularza dodawania produktów
@@ -33,6 +48,7 @@ document.getElementById("inventoryForm").addEventListener("submit", async functi
         if (productSelect.value === "Custom") addProductToDropdown(product);
     }
 });
+
 
 // Dodawanie produktu do listy rozwijanej
 function addProductToDropdown(productName) {
@@ -87,18 +103,58 @@ async function addToInventory(product, quantity, minQuantity) {
 // Aktualizacja listy produktów z podświetleniem niskich stanów
 function updateInventoryList(data) {
     const inventoryList = document.getElementById("productList");
-    inventoryList.innerHTML = "";
+    inventoryList.innerHTML = ""; // Wyczyść poprzednie elementy listy
 
     data.forEach(item => {
         const listItem = document.createElement("li");
         listItem.textContent = `${item.product} - Ilość: ${item.quantity} (Min: ${item.minQuantity || 0})`;
 
+        // Dodaj zdarzenie kliknięcia do elementu listy
+        listItem.addEventListener('click', function() {
+            const productSelect = document.getElementById("product");
+            productSelect.value = item.product; // Ustaw wybrany produkt w liście rozwijanej
+
+            const customProductInput = document.getElementById("customProductName");
+            customProductInput.style.display = "none"; // Ukryj pole niestandardowego produktu
+            customProductInput.value = ""; // Wyczyść pole, aby nie pozostawiać starej wartości
+
+            // Ustaw minimalny stan w odpowiednim polu
+            document.getElementById("minQuantity").value = item.minQuantity || 0; // Ustaw minimalny stan
+        });
+
         if (item.quantity <= item.minQuantity) {
-            listItem.style.backgroundColor = 'red';
+            listItem.style.backgroundColor = 'red'; // Podświetlenie niskiego stanu
         }
-        inventoryList.appendChild(listItem);
+        inventoryList.appendChild(listItem); // Dodaj element do listy
     });
 }
+
+// Inicjalizacja danych
+document.addEventListener('DOMContentLoaded', () => {
+    loadInventory();
+
+    // Obsługa zmiany wyboru produktu
+    const productSelect = document.getElementById("product");
+    const customProductInput = document.getElementById("customProductName");
+
+    productSelect.addEventListener('change', function() {
+        if (productSelect.value === "Custom") {
+            customProductInput.style.display = "block"; // Pokaż pole do wprowadzenia nazwy
+            customProductInput.value = ""; // Wyczyść pole, aby użytkownik mógł wpisać nową nazwę
+        } else {
+            customProductInput.style.display = "none"; // Ukryj pole, jeśli inny produkt jest wybrany
+            customProductInput.value = ""; // Wyczyść pole, aby nie pozostawiać starej wartości
+            // Wyszukaj produkt, aby ustawić minimalny stan
+            const selectedProduct = data.find(item => item.product === productSelect.value);
+            if (selectedProduct) {
+                document.getElementById("minQuantity").value = selectedProduct.minQuantity || 0; // Ustaw minimalny stan
+            }
+        }
+    });
+});
+
+// Reszta kodu (np. obsługa formularza, dodawanie do magazynu itp.) pozostaje bez zmian...
+
 
 // Usuwanie produktu
 async function removeProduct(productName) {
@@ -134,7 +190,8 @@ document.getElementById("removeButton").addEventListener("click", async function
 // Obsługa przycisku czyszczenia
 document.getElementById("clearButton").addEventListener("click", async function() {
     if (confirm("Czy na pewno chcesz wyczyścić całą listę?")) {
-        const { error } = await supabaseClient.from('inventory').delete();
+        // Wywołanie funkcji TRUNCATE
+        const { error } = await supabaseClient.rpc('truncate_inventory');
         if (error) {
             console.error('Błąd czyszczenia magazynu:', error);
         } else {
@@ -142,6 +199,8 @@ document.getElementById("clearButton").addEventListener("click", async function(
         }
     }
 });
+
+
 
 // Funkcja eksportu danych do XLSX
 document.getElementById("exportButton").addEventListener("click", async function() {
@@ -165,3 +224,56 @@ document.getElementById("exportButton").addEventListener("click", async function
 
     XLSX.writeFile(workbook, "inventory.xlsx");
 });
+
+// Obsługa przycisku "Help"
+document.getElementById("helpButton").addEventListener("click", function() {
+    // Tutaj możesz dostosować treść okna pomocy
+    const helpMessage = `
+        <h2>Pomoc</h2>
+        <p>Aby dodać produkt do magazynu:</p>
+        <ol>
+            <li>Wybierz produkt z listy rozwijanej lub wprowadź niestandardową nazwę.</li>
+            <li>Wprowadź ilość i minimalny stan.</li>
+            <li>Kliknij "Dodaj".</li>
+        </ol>
+        <p>Aby usunąć produkt, wybierz go z listy rozwijanej i kliknij "Usuń".</p>
+        <p>Aby wyczyścić magazyn, kliknij "Wyczyść".</p>
+        <p>Aby eksportować dane, kliknij "Eksportuj".</p>
+    `;
+
+    // Tworzenie okna dialogowego
+    const helpWindow = document.createElement("div");
+    helpWindow.style.position = "fixed";
+    helpWindow.style.top = "50%";
+    helpWindow.style.left = "50%";
+    helpWindow.style.transform = "translate(-50%, -50%)";
+    helpWindow.style.backgroundColor = "white";
+    helpWindow.style.padding = "20px";
+    helpWindow.style.boxShadow = "0 0 10px rgba(0, 0, 0, 0.5)";
+    helpWindow.style.zIndex = "1000";
+
+    // Dodawanie treści do okna pomocy
+    helpWindow.innerHTML = helpMessage;
+
+    // Dodawanie przycisku do zamknięcia okna
+    const closeButton = document.createElement("button");
+    closeButton.textContent = "Zamknij";
+    closeButton.style.marginTop = "10px";
+    closeButton.addEventListener("click", function() {
+        document.body.removeChild(helpWindow); // Usuń okno po kliknięciu
+    });
+
+    helpWindow.appendChild(closeButton);
+    document.body.appendChild(helpWindow); // Dodaj okno do ciała dokumentu
+});
+
+// Obsługa przycisku feedback
+document.getElementById("feedbackButton").addEventListener("click", function() {
+    const recipientEmail = "mateusz.walczak@checkpt.com"; // Zastąp swoim adresem e-mail
+    const subject = "Feedback z aplikacji magazynowej"; // Ustaw tytuł e-maila
+    const body = ""; // Opcjonalny domyślny tekst wiadomości
+
+    // Otwórz okno poczty z predefiniowanymi wartościami
+    window.location.href = `mailto:${recipientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+});
+
