@@ -229,7 +229,10 @@ document.getElementById("helpButton").addEventListener("click", function() {
     helpWindow.style.left = "50%";
     helpWindow.style.transform = "translate(-50%, -50%)";
     helpWindow.style.backgroundColor = "white";
-    helpWindow.style.padding = "20px";
+    helpWindow.style.padding = "40px";
+    helpWindow.style.width = "80%";   // Szerokość okna
+    helpWindow.style.height = "auto";  // Wysokość okna
+
     helpWindow.style.boxShadow = "0 0 10px rgba(0, 0, 0, 0.5)";
     helpWindow.style.zIndex = "1000";
 
