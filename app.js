@@ -56,29 +56,12 @@ document.getElementById("inventoryForm").addEventListener("submit", async functi
 
 // Dodawanie produktu do magazynu i zapis w Supabase
 async function addToInventory(product, quantity, minQuantity) {
-    const { data, error } = await supabaseClient.from('inventory').select('*').eq('product', product).single();
-    if (error && error.code !== 'PGRST116') {
-        console.error('Błąd pobierania produktu:', error);
+    const { data, error } = await supabaseClient.from('inventory').insert([{ product, quantity, minQuantity }]);
+    if (error) {
+        console.error('Błąd dodawania produktu:', error);
         return;
     }
 
-    if (data) {
-        const newQuantity = data.quantity + quantity;
-        if (newQuantity < 0) {
-            alert(`Nie masz tyle ${product}!`);
-            return;
-        }
-
-        await supabaseClient.from('inventory').update({ quantity: newQuantity, minQuantity: minQuantity || data.minQuantity }).eq('product', product);
-    } else {
-        if (quantity > 0) {
-            await supabaseClient.from('inventory').insert([{ product, quantity, minQuantity }]);
-            addProductToDropdown(product);
-        } else {
-            alert("Nie można dodać produktu z ujemną ilością!");
-            return;
-        }
-    }
     loadInventory();
 }
 
@@ -136,13 +119,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Usuwanie produktu
 async function removeProduct(productName) {
+    // Usuwanie produktu z bazy danych
     const { error } = await supabaseClient.from('inventory').delete().eq('product', productName);
     if (error) {
         console.error('Błąd usuwania produktu:', error);
     } else {
-        loadInventory();
+        console.log("Produkt usunięty pomyślnie.");
     }
 }
 
@@ -159,13 +142,28 @@ document.getElementById("removeButton").addEventListener("click", async function
     if (productName && productName !== "Custom") {
         const confirmDelete = confirm(`Czy na pewno chcesz usunąć ${productName} z listy?`);
         if (confirmDelete) {
-            await removeProduct(productName);
-            productSelect.value = "";
+            await removeProduct(productName); // Usunięcie produktu z bazy danych
+            
+            // Usunięcie opcji z dropdowna
+            const optionToRemove = Array.from(productSelect.options).find(option => option.value === productName);
+            if (optionToRemove) {
+                productSelect.remove(optionToRemove.index); // Usuń opcję z dropdowna
+                console.log("Opcja usunięta z dropdowna:", productName);
+            } else {
+                console.error("Nie znaleziono opcji do usunięcia:", productName);
+            }
+            
+            productSelect.value = ""; // Wyczyść wartość dropdowna
         }
     } else {
         alert("Wybierz produkt do usunięcia.");
     }
 });
+
+
+
+
+
 
 // Obsługa przycisku czyszczenia
 document.getElementById("clearButton").addEventListener("click", async function() {
@@ -175,7 +173,7 @@ document.getElementById("clearButton").addEventListener("click", async function(
         if (error) {
             console.error('Błąd czyszczenia magazynu:', error);
         } else {
-            loadInventory();
+            loadInventory(); // Ładuj dane po wyczyszczeniu
         }
     }
 });
@@ -259,6 +257,6 @@ document.getElementById("helpButton").addEventListener("click", function() {
 document.addEventListener('DOMContentLoaded', () => {
     // Inicjalizacja przycisków
     document.getElementById("removeButton").addEventListener("click", removeProduct);
-    document.getElementById("clearButton").addEventListener("click", clearInventory);
-    document.getElementById("exportButton").addEventListener("click", exportToXLSX);
+    document.getElementById("clearButton").addEventListener("click", clearButton);
+    document.getElementById("exportButton").addEventListener("click", exportButton);
 });
