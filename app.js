@@ -56,41 +56,32 @@ document.getElementById("inventoryForm").addEventListener("submit", async functi
 
 // Dodawanie produktu do magazynu i zapis w Supabase
 async function addToInventory(product, quantity, minQuantity) {
-    // Sprawdzenie, czy produkt już istnieje
-    const { data, error } = await supabaseClient.from('inventory').select('*').eq('product', product).single();
-    if (error && error.code !== 'PGRST116') {
-        console.error('Błąd pobierania produktu:', error);
-        return;
+    try {
+        // Próba dodania nowego produktu
+        const { error: insertError } = await supabaseClient
+            .from('inventory')
+            .insert([{ product, quantity, minQuantity }]);
+
+        if (insertError && insertError.code === '23505') {
+            // Jeśli produkt istnieje, wykonaj aktualizację
+            const { data, error: updateError } = await supabaseClient
+                .from('inventory')
+                .update({ quantity: supabaseClient.raw(`quantity + ${quantity}`), minQuantity })
+                .eq('product', product);
+
+            if (updateError) {
+                console.error('Błąd aktualizacji ilości produktu:', updateError);
+            }
+        } else if (insertError) {
+            console.error('Błąd dodawania produktu:', insertError);
+        }
+    } catch (error) {
+        console.error('Nieoczekiwany błąd:', error);
     }
 
-    if (data) {
-        // Produkt istnieje - zaktualizuj ilość
-        const newQuantity = data.quantity + quantity;
-        if (newQuantity < 0) {
-            alert(`Nie masz tyle ${product}!`);
-            return;
-        }
-        const { error: updateError } = await supabaseClient.from('inventory').update({ quantity: newQuantity, minQuantity: minQuantity || data.minQuantity }).eq('product', product);
-        if (updateError) {
-            console.error('Błąd aktualizacji ilości produktu:', updateError);
-            return;
-        }
-    } else {
-        // Produkt nie istnieje - dodaj go do bazy danych
-        if (quantity > 0) {
-            const { error: insertError } = await supabaseClient.from('inventory').insert([{ product, quantity, minQuantity }]);
-            if (insertError) {
-                console.error('Błąd dodawania produktu:', insertError);
-                return;
-            }
-            addProductToDropdown(product); // Dodanie produktu do listy rozwijanej
-        } else {
-            alert("Nie można dodać produktu z ujemną ilością!");
-            return;
-        }
-    }
     loadInventory(); // Odświeżenie listy produktów po dodaniu/aktualizacji
 }
+
 
 
 // Aktualizacja listy produktów z podświetleniem niskich stanów
