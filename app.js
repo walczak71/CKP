@@ -56,14 +56,42 @@ document.getElementById("inventoryForm").addEventListener("submit", async functi
 
 // Dodawanie produktu do magazynu i zapis w Supabase
 async function addToInventory(product, quantity, minQuantity) {
-    const { data, error } = await supabaseClient.from('inventory').insert([{ product, quantity, minQuantity }]);
-    if (error) {
-        console.error('Błąd dodawania produktu:', error);
+    // Sprawdzenie, czy produkt już istnieje
+    const { data, error } = await supabaseClient.from('inventory').select('*').eq('product', product).single();
+    if (error && error.code !== 'PGRST116') {
+        console.error('Błąd pobierania produktu:', error);
         return;
     }
 
-    loadInventory();
+    if (data) {
+        // Produkt istnieje - zaktualizuj ilość
+        const newQuantity = data.quantity + quantity;
+        if (newQuantity < 0) {
+            alert(`Nie masz tyle ${product}!`);
+            return;
+        }
+        const { error: updateError } = await supabaseClient.from('inventory').update({ quantity: newQuantity, minQuantity: minQuantity || data.minQuantity }).eq('product', product);
+        if (updateError) {
+            console.error('Błąd aktualizacji ilości produktu:', updateError);
+            return;
+        }
+    } else {
+        // Produkt nie istnieje - dodaj go do bazy danych
+        if (quantity > 0) {
+            const { error: insertError } = await supabaseClient.from('inventory').insert([{ product, quantity, minQuantity }]);
+            if (insertError) {
+                console.error('Błąd dodawania produktu:', insertError);
+                return;
+            }
+            addProductToDropdown(product); // Dodanie produktu do listy rozwijanej
+        } else {
+            alert("Nie można dodać produktu z ujemną ilością!");
+            return;
+        }
+    }
+    loadInventory(); // Odświeżenie listy produktów po dodaniu/aktualizacji
 }
+
 
 // Aktualizacja listy produktów z podświetleniem niskich stanów
 function updateInventoryList(data) {
@@ -119,13 +147,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+// Usuwanie produktu
 async function removeProduct(productName) {
-    // Usuwanie produktu z bazy danych
     const { error } = await supabaseClient.from('inventory').delete().eq('product', productName);
     if (error) {
         console.error('Błąd usuwania produktu:', error);
     } else {
-        console.log("Produkt usunięty pomyślnie.");
+        loadInventory();
     }
 }
 
@@ -142,28 +170,13 @@ document.getElementById("removeButton").addEventListener("click", async function
     if (productName && productName !== "Custom") {
         const confirmDelete = confirm(`Czy na pewno chcesz usunąć ${productName} z listy?`);
         if (confirmDelete) {
-            await removeProduct(productName); // Usunięcie produktu z bazy danych
-            
-            // Usunięcie opcji z dropdowna
-            const optionToRemove = Array.from(productSelect.options).find(option => option.value === productName);
-            if (optionToRemove) {
-                productSelect.remove(optionToRemove.index); // Usuń opcję z dropdowna
-                console.log("Opcja usunięta z dropdowna:", productName);
-            } else {
-                console.error("Nie znaleziono opcji do usunięcia:", productName);
-            }
-            
-            productSelect.value = ""; // Wyczyść wartość dropdowna
+            await removeProduct(productName);
+            productSelect.value = "";
         }
     } else {
         alert("Wybierz produkt do usunięcia.");
     }
 });
-
-
-
-
-
 
 // Obsługa przycisku czyszczenia
 document.getElementById("clearButton").addEventListener("click", async function() {
